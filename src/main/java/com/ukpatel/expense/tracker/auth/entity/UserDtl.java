@@ -4,13 +4,11 @@ import com.ukpatel.expense.tracker.common.base.entity.TimestampedBase;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.util.Date;
 
 @Getter
 @Setter
-@ToString
 @Entity
 @Table(name = "user_dtl")
 public class UserDtl extends TimestampedBase {
@@ -29,4 +27,13 @@ public class UserDtl extends TimestampedBase {
     @Column(name = "dob")
     private Date dob;
 
+    @Override
+    public String toString() {
+        return "UserDtl{" +
+                "userDtlId=" + userDtlId +
+                ", fullName='" + fullName + '\'' +
+                ", userId='" + userMst.getUserId() + '\'' +
+                ", dob=" + dob +
+                '}';
+    }
 }

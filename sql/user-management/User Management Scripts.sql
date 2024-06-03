@@ -1,6 +1,13 @@
+DROP TABLE IF EXISTS user_dtl;
+DROP TABLE IF EXISTS user_mst;
+DROP TABLE IF EXISTS user_dtl_hst;
+DROP TABLE IF EXISTS user_pwd_changed_hst;
+DROP TABLE IF EXISTS blacklisted_jwt_txn;
+
+
 -- user_mst
 CREATE TABLE "user_mst"(
-    "user_id" BIGINT NOT NULL,
+    "user_id" BIGSERIAL NOT NULL,
     "email" VARCHAR(255) NOT NULL,
     "password" VARCHAR(255) NOT NULL,
     "pwd_change_type" BIGINT NOT NULL,
@@ -17,7 +24,7 @@ ALTER TABLE
 
 -- user_dtl
 CREATE TABLE "user_dtl"(
-    "user_dtl_id" BIGINT NOT NULL,
+    "user_dtl_id" BIGSERIAL NOT NULL,
     "user_id" BIGINT NOT NULL,
     "full_name" VARCHAR(255) NOT NULL,
     "dob" TIMESTAMP(0) WITHOUT TIME ZONE NULL,
@@ -35,7 +42,7 @@ ALTER TABLE
 
 -- blacklisted_jwt_txn
 CREATE TABLE "blacklisted_jwt_txn"(
-    "blacklisted_jwt_txn_id" BIGINT PRIMARY KEY NOT NULL,
+    "blacklisted_jwt_txn_id" BIGSERIAL PRIMARY KEY NOT NULL,
     "token" VARCHAR(500) NOT NULL,
     "valid_till" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     "active_flag" SMALLINT NOT NULL,
