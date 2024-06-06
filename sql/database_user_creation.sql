@@ -23,3 +23,5 @@ $$;
 
 -- 3. Configure default privileges for future tables
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO expense_tracker;
+
+GRANT ALL ON SCHEMA public TO expense_tracker;
