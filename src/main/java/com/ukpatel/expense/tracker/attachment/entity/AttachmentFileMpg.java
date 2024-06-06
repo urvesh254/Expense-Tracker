@@ -33,7 +33,4 @@ public class AttachmentFileMpg extends AuditBaseWithUpdater {
 
     @Column(name = "file_data", nullable = false)
     private byte[] fileData;
-
-    @Column(name = "saved_flag")
-    private Short savedFlag;
 }

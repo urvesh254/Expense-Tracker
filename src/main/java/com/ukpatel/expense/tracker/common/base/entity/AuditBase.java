@@ -16,15 +16,15 @@ import java.util.Date;
 public abstract class AuditBase {
 
     @Column(name = "active_flag", nullable = false)
-    private Short activeFlag;
+    protected Short activeFlag;
 
     @ManyToOne
     @JoinColumn(name = "created_by_user_id")
-    private UserMst createdByUser;
+    protected UserMst createdByUser;
 
     @Column(name = "created_date", nullable = false)
-    private Date createdDate;
+    protected Date createdDate;
 
     @Column(name = "created_by_ip", nullable = false)
-    private String createdByIp;
+    protected String createdByIp;
 }

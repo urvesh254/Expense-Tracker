@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 import static com.ukpatel.expense.tracker.attachment.constants.AttachmentConstants.OPTION_DOWNLOAD;
 import static com.ukpatel.expense.tracker.attachment.constants.AttachmentConstants.OPTION_VIEW;
@@ -27,24 +28,30 @@ public class AttachmentController {
     @PostMapping("/")
     public ResponseEntity<AttachmentDTO> uploadAttachment(
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "attachmentId", required = false) Long attachmentId
+            @RequestParam(value = "attachmentId", required = false) Long attachmentId,
+            @RequestParam(value = "sessionId", required = false) UUID sessionId
     ) throws IOException {
-        AttachmentDTO attachmentDTO = AttachmentDTO.builder().attachmentId(attachmentId).build();
-        attachmentDTO = attachmentService.saveAttachment(attachmentDTO, file);
+        AttachmentDTO attachmentDTO = AttachmentDTO.builder()
+                .attachmentId(attachmentId)
+                .sessionId(sessionId)
+                .build();
+        attachmentDTO = attachmentService.saveFileAttachmentInSession(attachmentDTO, file);
         return new ResponseEntity<>(attachmentDTO, HttpStatus.OK);
     }
 
     @DeleteMapping("/{attachmentId}/{attachmentFileId}")
     public ResponseEntity<Object> deleteFileAttachment(
             @PathVariable(value = "attachmentId") Long attachmentId,
-            @PathVariable(value = "attachmentFileId") Long attachmentFileId
+            @PathVariable(value = "attachmentFileId") Long attachmentFileId,
+            @RequestParam(value = "sessionId") UUID sessionId
     ) {
         AttachmentDTO attachmentDTO = AttachmentDTO.builder()
                 .attachmentId(attachmentId)
                 .attachmentFileId(attachmentFileId)
+                .sessionId(sessionId)
                 .build();
-        attachmentService.deleteFileAttachment(attachmentDTO);
-        return ResponseEntity.ok().build();
+        attachmentDTO = attachmentService.deleteFileAttachmentInSession(attachmentDTO);
+        return ResponseEntity.ok(attachmentDTO);
     }
 
 
@@ -76,5 +83,11 @@ public class AttachmentController {
         } else {
             return ResponseEntity.ok(attachmentFileMpgDTO);
         }
+    }
+
+    @PostMapping("/save")
+    public ResponseEntity<?> saveAttachmentsInDB(@RequestBody AttachmentDTO attachmentDTO) {
+        attachmentService.saveFileAttachments(attachmentDTO);
+        return ResponseEntity.ok().build();
     }
 }

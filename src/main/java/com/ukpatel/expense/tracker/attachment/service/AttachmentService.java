@@ -1,11 +1,14 @@
 package com.ukpatel.expense.tracker.attachment.service;
 
+import com.ukpatel.expense.tracker.attachment.constants.OperationType;
 import com.ukpatel.expense.tracker.attachment.dto.AttachmentDTO;
 import com.ukpatel.expense.tracker.attachment.dto.AttachmentFileMpgDTO;
 import com.ukpatel.expense.tracker.attachment.entity.AttachmentFileMpg;
 import com.ukpatel.expense.tracker.attachment.entity.AttachmentMst;
+import com.ukpatel.expense.tracker.attachment.entity.AttachmentOperationTxn;
 import com.ukpatel.expense.tracker.attachment.repo.AttachmentFileMpgRepo;
 import com.ukpatel.expense.tracker.attachment.repo.AttachmentMstRepo;
+import com.ukpatel.expense.tracker.attachment.repo.AttachmentOperationTxnRepo;
 import com.ukpatel.expense.tracker.auth.entity.UserMst;
 import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
@@ -16,24 +19,27 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
-import static com.ukpatel.expense.tracker.attachment.constants.AttachmentConstants.CREATED;
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
+import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.CREATED;
+import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.INACTIVE;
+import static com.ukpatel.expense.tracker.attachment.service.AttachmentSessionManagementService.generateNewSessionId;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getUserSessionInfo;
 
 @Service
 @RequiredArgsConstructor
 public class AttachmentService {
 
+    private final AttachmentOperationTxnRepo operationTxnRepo;
     private final AttachmentMstRepo attachmentMstRepo;
     private final AttachmentFileMpgRepo attachmentFileMpgRepo;
 
     @Transactional
-    public AttachmentDTO saveAttachment(AttachmentDTO attachmentDTO, MultipartFile file) throws IOException {
+    public AttachmentDTO saveFileAttachmentInSession(AttachmentDTO attachmentDTO, MultipartFile file) throws IOException {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst createdByUser = new UserMst();
-        createdByUser.setUserId(userSessionInfo.getUserDTO().getUserId());
+        UserMst loggedInUser = new UserMst();
+        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
 
         // Configuring Attachment Mst
         AttachmentMst attachmentMst;
@@ -42,7 +48,7 @@ public class AttachmentService {
         } else {
             attachmentMst = new AttachmentMst();
             attachmentMst.setActiveFlag(STATUS_ACTIVE);
-            attachmentMst.setCreatedByUser(createdByUser);
+            attachmentMst.setCreatedByUser(loggedInUser);
             attachmentMst.setCreatedDate(new Date());
             attachmentMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
             attachmentMstRepo.save(attachmentMst);
@@ -56,52 +62,30 @@ public class AttachmentService {
         attachmentFileMpg.setFileSizeInBytes(file.getSize());
         attachmentFileMpg.setContentType(file.getContentType());
         attachmentFileMpg.setFileData(file.getBytes());
-
-        attachmentFileMpg.setSavedFlag(CREATED);
-        attachmentFileMpg.setActiveFlag(STATUS_ACTIVE);
-        attachmentFileMpg.setCreatedByUser(createdByUser);
+        attachmentFileMpg.setActiveFlag(CREATED.getStatus());
+        attachmentFileMpg.setCreatedByUser(loggedInUser);
         attachmentFileMpg.setCreatedDate(new Date());
         attachmentFileMpg.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         attachmentFileMpgRepo.save(attachmentFileMpg);
 
+        // Inserting file operation in session
+        UUID sessionId = generateNewSessionId(attachmentDTO.getSessionId());
+        AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, OperationType.INSERT);
+        operationTxn.setCreatedByUser(loggedInUser);
+        operationTxn.setCreatedDate(new Date());
+        operationTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+        operationTxnRepo.save(operationTxn);
+
         // Setting data that need to send as response
         attachmentDTO.setAttachmentId(attachmentMst.getAttachmentId());
         attachmentDTO.setAttachmentFileId(attachmentFileMpg.getAttachmentFileId());
-
-        return attachmentDTO;
-    }
-
-    public AttachmentDTO updateAttachment(AttachmentDTO attachmentDTO, MultipartFile file) throws IOException {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = new UserMst();
-        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
-
-        if (attachmentDTO.getAttachmentId() == null || attachmentDTO.getAttachmentFileId() == null) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Attachment ID and Attachment File ID must not be null");
-        }
-
-        AttachmentFileMpg attachmentFileMpg = attachmentFileMpgRepo.findById(attachmentDTO.getAttachmentFileId()).orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "attachmentFileId not found"));
-        if (!attachmentFileMpg.getAttachmentMst().getAttachmentId().equals(attachmentDTO.getAttachmentId())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Incorrect combination of Attachment ID and Attachment File ID");
-        }
-
-        attachmentFileMpg.setFileName(file.getOriginalFilename());
-        attachmentFileMpg.setFileDesc(file.getOriginalFilename());
-        attachmentFileMpg.setFileSizeInBytes(file.getSize());
-        attachmentFileMpg.setContentType(file.getContentType());
-        attachmentFileMpg.setFileData(file.getBytes());
-
-        attachmentFileMpg.setSavedFlag(CREATED); // TODO: need to think logic again
-        attachmentFileMpg.setUpdatedByUser(loggedInUser);
-        attachmentFileMpg.setUpdatedDate(new Date());
-        attachmentFileMpg.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
-        attachmentFileMpgRepo.save(attachmentFileMpg);
+        attachmentDTO.setSessionId(sessionId);
 
         return attachmentDTO;
     }
 
     @Transactional
-    public void deleteFileAttachment(AttachmentDTO attachmentDTO) {
+    public AttachmentDTO deleteFileAttachmentInSession(AttachmentDTO attachmentDTO) {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = new UserMst();
         loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
@@ -115,11 +99,21 @@ public class AttachmentService {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Incorrect combination of Attachment ID and Attachment File ID");
         }
 
-        attachmentFileMpg.setActiveFlag(STATUS_INACTIVE);
-        attachmentFileMpg.setUpdatedByUser(loggedInUser);
-        attachmentFileMpg.setUpdatedDate(new Date());
-        attachmentFileMpg.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
-        attachmentFileMpgRepo.save(attachmentFileMpg);
+        // Inserting file operation in session
+        UUID sessionId = generateNewSessionId(attachmentDTO.getSessionId());
+        AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, OperationType.DELETE);
+        operationTxn.setCreatedByUser(loggedInUser);
+        operationTxn.setCreatedDate(new Date());
+        operationTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+        operationTxnRepo.save(operationTxn);
+
+
+        // Setting data that need to send as response
+        attachmentDTO.setAttachmentId(attachmentFileMpg.getAttachmentMst().getAttachmentId());
+        attachmentDTO.setAttachmentFileId(attachmentFileMpg.getAttachmentFileId());
+        attachmentDTO.setSessionId(sessionId);
+
+        return attachmentDTO;
     }
 
     @Transactional
@@ -164,5 +158,39 @@ public class AttachmentService {
                 .contentType(attachmentFileMpg.getContentType())
                 .fileData(attachmentFileMpg.getFileData())
                 .build();
+    }
+
+    @Transactional
+    public void saveFileAttachments(AttachmentDTO attachmentDTO) {
+        // Validations
+        if (attachmentDTO.getSessionId() == null) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Attachment SessionId is missing");
+        }
+
+        // 1. Retrieve all attachments in session
+        List<AttachmentOperationTxn> attachmentOperationList = operationTxnRepo.findBySessionIdOrderByCreatedDate(attachmentDTO.getSessionId());
+
+        // 2. Iterating over all and make changes according to db.
+        Set<Long> attachmentsCreatedInSession = new HashSet<>();
+        for (AttachmentOperationTxn operationTxn : attachmentOperationList) {
+            AttachmentFileMpg attachmentFileMpg = operationTxn.getAttachmentFileMpg();
+            Long attachmentFileId = attachmentFileMpg.getAttachmentFileId();
+
+            short activeFlag = INACTIVE.getStatus();
+            if (operationTxn.getOperationType() == OperationType.INSERT) {
+                activeFlag = 1;
+                attachmentsCreatedInSession.add(attachmentFileId);
+            }
+
+            attachmentFileMpg.setActiveFlag(activeFlag);
+            attachmentFileMpgRepo.save(attachmentFileMpg);
+        }
+
+        // 3. Delete session operation from table attachment_operation_txn
+        // If your business logic didn't allow you to delete then you can keep it with active_flag = 0
+        operationTxnRepo.deleteBySessionId(attachmentDTO.getSessionId());
+
+        // If file stored as created status then it is temporary file, so we can delete it
+        attachmentsCreatedInSession.forEach(attachmentFileMpgRepo::deleteById);
     }
 }
