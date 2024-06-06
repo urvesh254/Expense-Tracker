@@ -17,11 +17,11 @@ public abstract class AuditBaseWithUpdater extends AuditBase {
 
     @ManyToOne
     @JoinColumn(name = "updated_by_user_id")
-    private UserMst updatedByUser;
+    protected UserMst updatedByUser;
 
     @Column(name = "updated_date")
-    private Date updatedDate;
+    protected Date updatedDate;
 
     @Column(name = "updated_by_ip")
-    private String updatedByIp;
+    protected String updatedByIp;
 }
