@@ -3,6 +3,7 @@ package com.ukpatel.expense.tracker.auth.jwt.filter;
 import com.ukpatel.expense.tracker.auth.dto.UserDTO;
 import com.ukpatel.expense.tracker.auth.entity.UserMst;
 import com.ukpatel.expense.tracker.auth.jwt.JwtUtils;
+import com.ukpatel.expense.tracker.auth.repo.BlacklistedJwtTxnRepo;
 import com.ukpatel.expense.tracker.auth.repo.UserMstRepo;
 import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
@@ -24,6 +25,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
+import static com.ukpatel.expense.tracker.auth.jwt.JwtUtils.getJwtTokenFromHeader;
 import static com.ukpatel.expense.tracker.auth.jwt.constant.JwtConstants.AUTHORIZATION_HEADER;
 import static com.ukpatel.expense.tracker.auth.jwt.constant.JwtConstants.AUTHORIZATION_PREFIX;
 import static com.ukpatel.expense.tracker.common.constant.CmnConstants.USER_SESSION_INFO;
@@ -34,6 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserMstRepo userMstRepo;
+    private final BlacklistedJwtTxnRepo blacklistedJwtTxnRepo;
 
     @Autowired
     @Qualifier("handlerExceptionResolver")
@@ -51,14 +54,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String jwtToken = request.getHeader(AUTHORIZATION_HEADER);
 
-            // if token is not present then ignore it
-            if (!(jwtToken != null && jwtToken.startsWith(AUTHORIZATION_PREFIX))) {
+            // Validate and retrieve token
+            jwtToken = getJwtTokenFromHeader(jwtToken);
+            if (jwtToken.isEmpty()) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // Retrieving claims from token
             jwtToken = jwtToken.replaceAll(AUTHORIZATION_PREFIX, "");
+
+            // Validate if provided JWT token is invalidated or not
+            if (blacklistedJwtTxnRepo.existsByToken(jwtToken)) {
+                throw new ApplicationException("JWT token session has expired");
+            }
+
             Claims claims = jwtUtils.decodeToken(jwtToken);
             Long userId = Long.valueOf(claims.getSubject());
             UserMst userMst = userMstRepo.findById(userId).orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "User not found"));
