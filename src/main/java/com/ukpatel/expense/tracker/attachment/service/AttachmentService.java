@@ -187,10 +187,15 @@ public class AttachmentService {
         }
 
         // 3. Delete session operation from table attachment_operation_txn
+        // Cleanup Start
         // If your business logic didn't allow you to delete then you can keep it with active_flag = 0
         operationTxnRepo.deleteBySessionId(attachmentDTO.getSessionId());
 
         // If file stored as created status then it is temporary file, so we can delete it
         attachmentsCreatedInSession.forEach(attachmentFileMpgRepo::deleteById);
+
+        // Cleanup attachmentId which are created for storing temporary files.
+        attachmentMstRepo.deleteAllUnusedAttachments();
+        // Cleanup End
     }
 }
