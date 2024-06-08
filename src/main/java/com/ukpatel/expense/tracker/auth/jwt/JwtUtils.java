@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Date;
 
+import static com.ukpatel.expense.tracker.auth.jwt.constant.JwtConstants.AUTHORIZATION_PREFIX;
 import static com.ukpatel.expense.tracker.auth.jwt.constant.JwtConstants.TOKEN_TYPE;
 
 @Component
@@ -17,6 +18,13 @@ public class JwtUtils {
 
     @Autowired
     private JwtProperties jwtProperties;
+
+    public static String getJwtTokenFromHeader(String authorizationHeader) {
+        if (!(authorizationHeader != null && authorizationHeader.startsWith(AUTHORIZATION_PREFIX))) {
+            return "";
+        }
+        return authorizationHeader.replaceAll(AUTHORIZATION_PREFIX, "");
+    }
 
     public String issueToken(Long userId, JwtTokenType jwtTokenType) {
         if (jwtTokenType == null) {

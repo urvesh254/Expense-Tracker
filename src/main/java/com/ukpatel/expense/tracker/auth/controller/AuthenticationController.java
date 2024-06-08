@@ -14,11 +14,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import static com.ukpatel.expense.tracker.auth.jwt.JwtUtils.getJwtTokenFromHeader;
+import static com.ukpatel.expense.tracker.auth.jwt.constant.JwtConstants.AUTHORIZATION_HEADER;
 import static com.ukpatel.expense.tracker.auth.jwt.constant.JwtTokenType.API_ACCESS_TOKEN;
 
 @RestController
@@ -32,13 +31,13 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
+        // TODO: write logic for saving attachment.
         userMstService.saveUser(registerRequestDTO);
         return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
-        System.out.println(loginRequest);
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         } catch (BadCredentialsException | UsernameNotFoundException e) {
@@ -57,5 +56,16 @@ public class AuthenticationController {
                 .build();
 
         return ResponseEntity.ok(tokenResponseDTO);
+    }
+
+    @PostMapping("/logout")
+    public void logout(
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String jwtToken
+    ) {
+        jwtToken = getJwtTokenFromHeader(jwtToken);
+        if (jwtToken.isEmpty()) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "'Authorization' header is missing from the request");
+        }
+        userMstService.logout(jwtToken);
     }
 }

@@ -1,8 +1,11 @@
 package com.ukpatel.expense.tracker.auth.service;
 
 import com.ukpatel.expense.tracker.auth.dto.RegisterRequestDTO;
+import com.ukpatel.expense.tracker.auth.entity.BlacklistedJwtTxn;
 import com.ukpatel.expense.tracker.auth.entity.UserDtl;
 import com.ukpatel.expense.tracker.auth.entity.UserMst;
+import com.ukpatel.expense.tracker.auth.jwt.JwtUtils;
+import com.ukpatel.expense.tracker.auth.repo.BlacklistedJwtTxnRepo;
 import com.ukpatel.expense.tracker.auth.repo.UserDtlRepo;
 import com.ukpatel.expense.tracker.auth.repo.UserMstRepo;
 import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
@@ -30,6 +33,8 @@ public class UserMstService implements UserDetailsService {
 
     private final UserMstRepo userMstRepo;
     private final UserDtlRepo userDtlRepo;
+    private final BlacklistedJwtTxnRepo blacklistedJwtTxnRepo;
+    private final JwtUtils jwtUtils;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
@@ -71,5 +76,23 @@ public class UserMstService implements UserDetailsService {
         userDtl.setCreatedDate(new Date());
         userDtl.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         userDtlRepo.save(userDtl);
+    }
+
+    @Transactional
+    public void logout(String jwtToken) {
+        UserSessionInfo userSessionInfo = getUserSessionInfo();
+        UserMst loggedInUser = new UserMst();
+        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
+
+        Date validTill = jwtUtils.decodeToken(jwtToken).getExpiration();
+
+        BlacklistedJwtTxn blacklistedJwtTxn = new BlacklistedJwtTxn();
+        blacklistedJwtTxn.setToken(jwtToken);
+        blacklistedJwtTxn.setValidTill(validTill);
+        blacklistedJwtTxn.setActiveFlag(STATUS_ACTIVE);
+        blacklistedJwtTxn.setCreatedByUser(loggedInUser);
+        blacklistedJwtTxn.setCreatedDate(new Date());
+        blacklistedJwtTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+        blacklistedJwtTxnRepo.save(blacklistedJwtTxn);
     }
 }
