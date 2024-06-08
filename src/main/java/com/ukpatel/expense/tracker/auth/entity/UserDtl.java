@@ -24,6 +24,7 @@ public class UserDtl extends TimestampedBase {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
+    @Temporal(TemporalType.DATE)
     @Column(name = "dob")
     private Date dob;
 
