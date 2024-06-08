@@ -68,11 +68,8 @@ public class CashbookService {
         cashbook.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         cashbookRepo.save(cashbook);
 
-        return CashbookDTO.builder()
-                .userId(loggedInUser.getUserId())
-                .cashbookId(cashbook.getCashbookId())
-                .cashbookName(cashbook.getCashbookName())
-                .build();
+        cashbookDTO.setUserId(loggedInUser.getUserId());
+        return cashbookDTO;
     }
 
     @Transactional

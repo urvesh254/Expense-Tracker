@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
 import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getUserSessionInfo;
 
 @Service
@@ -28,7 +29,7 @@ public class CashbookValidationService {
         if (cashbookId == null) {
             throw new ApplicationException("cashbookId is required");
         }
-        Cashbook cashbook = cashbookRepo.findById(cashbookId)
+        Cashbook cashbook = cashbookRepo.findByCashbookIdAndActiveFlag(cashbookId, STATUS_ACTIVE)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Cashbook not found"));
         return validateCashbookUser(cashbook);
     }
