@@ -23,6 +23,8 @@ import java.util.*;
 
 import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.CREATED;
 import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.INACTIVE;
+import static com.ukpatel.expense.tracker.attachment.constants.OperationType.DELETE;
+import static com.ukpatel.expense.tracker.attachment.constants.OperationType.INSERT;
 import static com.ukpatel.expense.tracker.attachment.service.AttachmentSessionManagementService.generateNewSessionId;
 import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
 import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getUserSessionInfo;
@@ -70,7 +72,7 @@ public class AttachmentService {
 
         // Inserting file operation in session
         UUID sessionId = generateNewSessionId(attachmentDTO.getSessionId());
-        AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, OperationType.INSERT);
+        AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, INSERT);
         operationTxn.setCreatedByUser(loggedInUser);
         operationTxn.setCreatedDate(new Date());
         operationTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
@@ -101,7 +103,7 @@ public class AttachmentService {
 
         // Inserting file operation in session
         UUID sessionId = generateNewSessionId(attachmentDTO.getSessionId());
-        AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, OperationType.DELETE);
+        AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, DELETE);
         operationTxn.setCreatedByUser(loggedInUser);
         operationTxn.setCreatedDate(new Date());
         operationTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
@@ -172,14 +174,19 @@ public class AttachmentService {
 
         // 2. Iterating over all and make changes according to db.
         Set<Long> attachmentsCreatedInSession = new HashSet<>();
+        Set<Long> attachmentDeletedInSession = new HashSet<>();
         for (AttachmentOperationTxn operationTxn : attachmentOperationList) {
             AttachmentFileMpg attachmentFileMpg = operationTxn.getAttachmentFileMpg();
             Long attachmentFileId = attachmentFileMpg.getAttachmentFileId();
+            OperationType operationType = operationTxn.getOperationType();
 
             short activeFlag = INACTIVE.getStatus();
-            if (operationTxn.getOperationType() == OperationType.INSERT) {
+            if (operationType == INSERT) {
                 activeFlag = 1;
                 attachmentsCreatedInSession.add(attachmentFileId);
+            } else if (attachmentsCreatedInSession.contains(attachmentFileId)
+                    && operationType == DELETE) {
+                attachmentDeletedInSession.add(attachmentFileId);
             }
 
             attachmentFileMpg.setActiveFlag(activeFlag);
@@ -192,10 +199,14 @@ public class AttachmentService {
         operationTxnRepo.deleteBySessionId(attachmentDTO.getSessionId());
 
         // If file stored as created status then it is temporary file, so we can delete it
-        attachmentsCreatedInSession.forEach(attachmentFileMpgRepo::deleteById);
+        attachmentDeletedInSession.forEach(attachmentFileMpgRepo::deleteById);
 
         // Cleanup attachmentId which are created for storing temporary files.
         attachmentMstRepo.deleteAllUnusedAttachments();
         // Cleanup End
+    }
+
+    public Optional<AttachmentMst> findById(Long attachmentId) {
+        return attachmentMstRepo.findById(attachmentId);
     }
 }
