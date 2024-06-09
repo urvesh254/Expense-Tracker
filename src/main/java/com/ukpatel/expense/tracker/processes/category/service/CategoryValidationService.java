@@ -15,8 +15,8 @@ import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_AC
 @RequiredArgsConstructor
 public class CategoryValidationService {
 
-    private final CashbookValidationService cashbookValidationService;
     private final CategoryRepo categoryRepo;
+    private final CashbookValidationService cashbookValidationService;
 
     public Category validateCashbookCategory(Long cashbookId, Long categoryId) {
         if (categoryId == null) {

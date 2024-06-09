@@ -31,13 +31,18 @@ public class CategoryService {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
 
+        // Validating Cashbook
         Cashbook cashbook = cashbookValidationService.validateCashbookUser(categoryDTO.getCashbookId());
-        if (categoryRepo.existsByCashbookCashbookIdAndCategoryNameAndActiveFlag(categoryDTO.getCashbookId(), categoryDTO.getCategoryName(), STATUS_ACTIVE)) {
+        String categoryName = categoryDTO.getCategoryName().trim();
+
+        // Validating Cashbook Category
+        if (categoryRepo.existsByCashbookCashbookIdAndCategoryNameAndActiveFlag(categoryDTO.getCashbookId(), categoryName, STATUS_ACTIVE)) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Category already exists");
         }
 
+        // Saving Category Values
         Category category = new Category();
-        category.setCategoryName(categoryDTO.getCategoryName());
+        category.setCategoryName(categoryName);
         category.setCashbook(cashbook);
         category.setActiveFlag(STATUS_ACTIVE);
         category.setCreatedByUser(loggedInUser);
@@ -54,11 +59,8 @@ public class CategoryService {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
 
-        // Validating Cashbook
-        cashbookValidationService.validateCashbookUser(categoryDTO.getCashbookId());
-        String categoryName = categoryDTO.getCategoryName().trim();
-
         // Validating Cashbook Category
+        String categoryName = categoryDTO.getCategoryName().trim();
         Category category = categoryValidationService.validateCashbookCategory(categoryDTO.getCashbookId(), categoryDTO.getCategoryId());
         if (categoryRepo.existsByCashbookCashbookIdAndCategoryNameAndActiveFlag(categoryDTO.getCashbookId(), categoryName, STATUS_ACTIVE)) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Category already exists");
@@ -79,6 +81,7 @@ public class CategoryService {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
 
+        // Validating Cashbook Category
         Category category = categoryValidationService.validateCashbookCategory(cashbookId, categoryId);
         category.setActiveFlag(STATUS_INACTIVE);
         category.setUpdatedByUser(loggedInUser);

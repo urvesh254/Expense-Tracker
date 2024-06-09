@@ -16,7 +16,7 @@ public class Category extends AuditBaseWithUpdater {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long categoryId;
 
-    @Column(name = "category_name")
+    @Column(name = "category_name", nullable = false)
     private String categoryName;
 
     @ManyToOne(fetch = FetchType.LAZY)
