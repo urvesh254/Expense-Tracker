@@ -1,5 +1,6 @@
 package com.ukpatel.expense.tracker.auth.controller;
 
+import com.ukpatel.expense.tracker.auth.dto.ChangePasswordRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.LoginRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.RegisterRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.TokenResponseDTO;
@@ -30,14 +31,18 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
+    public ResponseEntity<String> register(
+            @Valid @RequestBody RegisterRequestDTO registerRequestDTO
+    ) {
         // TODO: write logic for saving attachment.
         userMstService.saveUser(registerRequestDTO);
         return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<TokenResponseDTO> login(
+            @Valid @RequestBody LoginRequestDTO loginRequest
+    ) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         } catch (BadCredentialsException | UsernameNotFoundException e) {
@@ -67,5 +72,20 @@ public class AuthenticationController {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "'Authorization' header is missing from the request");
         }
         userMstService.logout(jwtToken);
+    }
+
+    @PostMapping("/change-password")
+    public void changePassword(
+            @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequestDTO
+    ) {
+        try {
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(changePasswordRequestDTO.getEmail(), changePasswordRequestDTO.getCurrentPassword()));
+        } catch (BadCredentialsException | UsernameNotFoundException e) {
+            throw new ApplicationException(HttpStatus.UNAUTHORIZED, e.getMessage());
+        } catch (Exception e) {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+
+        userMstService.changeUserPassword(changePasswordRequestDTO);
     }
 }

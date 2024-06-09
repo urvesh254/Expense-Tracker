@@ -1,5 +1,6 @@
 package com.ukpatel.expense.tracker.auth.service;
 
+import com.ukpatel.expense.tracker.auth.dto.ChangePasswordRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.RegisterRequestDTO;
 import com.ukpatel.expense.tracker.auth.entity.BlacklistedJwtTxn;
 import com.ukpatel.expense.tracker.auth.entity.UserDtl;
@@ -12,10 +13,7 @@ import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,23 +27,13 @@ import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getUserSe
 
 @Service
 @RequiredArgsConstructor
-public class UserMstService implements UserDetailsService {
+public class UserMstService {
 
+    private final JwtUtils jwtUtils;
     private final UserMstRepo userMstRepo;
     private final UserDtlRepo userDtlRepo;
+    private final PasswordEncoder passwordEncoder;
     private final BlacklistedJwtTxnRepo blacklistedJwtTxnRepo;
-    private final JwtUtils jwtUtils;
-
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<UserMst> userMstOptional = findUserByEmail(username);
-
-        if (userMstOptional.isPresent()) {
-            return userMstOptional.get();
-        } else {
-            throw new UsernameNotFoundException("User not Found!!");
-        }
-    }
 
     public Optional<UserMst> findUserByEmail(String username) {
         return userMstRepo.findByEmail(username);
@@ -57,7 +45,6 @@ public class UserMstService implements UserDetailsService {
             throw new ApplicationException(HttpStatus.CONFLICT, "Email is already exists");
         }
         UserSessionInfo userSessionInfo = getUserSessionInfo();
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         UserMst userMst = new UserMst();
         userMst.setEmail(registerRequestDTO.getEmail());
@@ -94,5 +81,18 @@ public class UserMstService implements UserDetailsService {
         blacklistedJwtTxn.setCreatedDate(new Date());
         blacklistedJwtTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         blacklistedJwtTxnRepo.save(blacklistedJwtTxn);
+    }
+
+    public void changeUserPassword(ChangePasswordRequestDTO changePasswordRequestDTO) {
+        UserSessionInfo userSessionInfo = getUserSessionInfo();
+
+        UserMst userMst = findUserByEmail(changePasswordRequestDTO.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("User not Found!!"));
+
+        String newEncodedPassword = passwordEncoder.encode(changePasswordRequestDTO.getNewPassword());
+        userMst.setPassword(newEncodedPassword);
+        userMst.setUpdatedDate(new Date());
+        userMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+        userMstRepo.save(userMst);
     }
 }
