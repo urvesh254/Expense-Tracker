@@ -1,5 +1,6 @@
 package com.ukpatel.expense.tracker.common.constant;
 
+import com.ukpatel.expense.tracker.auth.entity.UserMst;
 import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -26,5 +27,12 @@ public final class CmnConstants {
     public static UserSessionInfo getUserSessionInfo() {
         HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
         return (UserSessionInfo) request.getAttribute(USER_SESSION_INFO);
+    }
+
+    public static UserMst getLoggedInUser() {
+        UserSessionInfo userSessionInfo = getUserSessionInfo();
+        UserMst loggedInUser = new UserMst();
+        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
+        return loggedInUser;
     }
 }
