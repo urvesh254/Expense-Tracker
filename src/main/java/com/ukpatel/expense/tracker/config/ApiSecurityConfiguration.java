@@ -27,13 +27,16 @@ public class ApiSecurityConfiguration {
 
     private final AuthenticationService authenticationService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(apiAuthenticationEntryPoint))
                 .authorizeHttpRequests(requests -> requests
+                        .requestMatchers("/auth/change-password", "/auth/logout").authenticated()
                         .requestMatchers(PUBLIC_END_POINTS).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sessionConfigure -> sessionConfigure.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

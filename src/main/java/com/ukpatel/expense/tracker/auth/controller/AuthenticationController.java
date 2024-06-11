@@ -65,9 +65,9 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public void logout(
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String jwtToken
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token
     ) {
-        jwtToken = getJwtTokenFromHeader(jwtToken);
+        String jwtToken = getJwtTokenFromHeader(token);
         if (jwtToken.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "'Authorization' header is missing from the request");
         }
@@ -76,16 +76,10 @@ public class AuthenticationController {
 
     @PostMapping("/change-password")
     public void changePassword(
+            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
             @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequestDTO
     ) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(changePasswordRequestDTO.getEmail(), changePasswordRequestDTO.getCurrentPassword()));
-        } catch (BadCredentialsException | UsernameNotFoundException e) {
-            throw new ApplicationException(HttpStatus.UNAUTHORIZED, e.getMessage());
-        } catch (Exception e) {
-            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
-
-        userMstService.changeUserPassword(changePasswordRequestDTO);
+        String jwtToken = getJwtTokenFromHeader(token);
+        userMstService.changeUserPassword(changePasswordRequestDTO, jwtToken);
     }
 }

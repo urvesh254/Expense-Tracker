@@ -66,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Validate if provided JWT token is invalidated or not
             if (blacklistedJwtTxnRepo.existsByToken(jwtToken)) {
-                throw new ApplicationException("JWT token session has expired");
+                throw new ApplicationException(HttpStatus.BAD_REQUEST, "JWT token session has expired");
             }
 
             Claims claims = jwtUtils.decodeToken(jwtToken);

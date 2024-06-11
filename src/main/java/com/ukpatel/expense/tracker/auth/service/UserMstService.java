@@ -83,16 +83,26 @@ public class UserMstService {
         blacklistedJwtTxnRepo.save(blacklistedJwtTxn);
     }
 
-    public void changeUserPassword(ChangePasswordRequestDTO changePasswordRequestDTO) {
+    @Transactional
+    public void changeUserPassword(ChangePasswordRequestDTO changePasswordRequestDTO, String jwtToken) {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
 
         UserMst userMst = findUserByEmail(changePasswordRequestDTO.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not Found!!"));
+
+        if (!passwordEncoder.matches(changePasswordRequestDTO.getCurrentPassword(), userMst.getPassword())) {
+            throw new ApplicationException(HttpStatus.FORBIDDEN, "Incorrect Password!!");
+        } else if (changePasswordRequestDTO.getCurrentPassword().equals(changePasswordRequestDTO.getNewPassword())) {
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Current password and new password should not be same!!");
+        }
 
         String newEncodedPassword = passwordEncoder.encode(changePasswordRequestDTO.getNewPassword());
         userMst.setPassword(newEncodedPassword);
         userMst.setUpdatedDate(new Date());
         userMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         userMstRepo.save(userMst);
+
+        // Blacklisting the existing JWT token.
+        logout(jwtToken);
     }
 }
