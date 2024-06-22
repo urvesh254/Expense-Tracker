@@ -1,5 +1,6 @@
 package com.ukpatel.expense.tracker.auth.entity;
 
+import com.ukpatel.expense.tracker.attachment.entity.AttachmentMst;
 import com.ukpatel.expense.tracker.common.base.entity.TimestampedBase;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -27,6 +28,10 @@ public class UserDtl extends TimestampedBase {
     @Temporal(TemporalType.DATE)
     @Column(name = "dob")
     private Date dob;
+
+    @OneToOne
+    @JoinColumn(name = "profile_attachment_id")
+    private AttachmentMst profileAttachment;
 
     @Override
     public String toString() {

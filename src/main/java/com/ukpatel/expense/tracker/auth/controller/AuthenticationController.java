@@ -65,7 +65,7 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public void logout(
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token
+            @RequestHeader(value = AUTHORIZATION_HEADER) String token
     ) {
         String jwtToken = getJwtTokenFromHeader(token);
         if (jwtToken.isEmpty()) {
@@ -76,7 +76,7 @@ public class AuthenticationController {
 
     @PostMapping("/change-password")
     public void changePassword(
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String token,
+            @RequestHeader(value = AUTHORIZATION_HEADER) String token,
             @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequestDTO
     ) {
         String jwtToken = getJwtTokenFromHeader(token);
