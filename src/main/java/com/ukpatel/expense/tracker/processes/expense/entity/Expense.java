@@ -43,7 +43,7 @@ public class Expense extends AuditBaseWithUpdater {
     @JoinColumn(name = "payment_mode_id")
     private PaymentMode paymentMode;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "attachment_id")
     private AttachmentMst attachmentMst;
 

@@ -21,13 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
 
-import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.CREATED;
-import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.INACTIVE;
+import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.*;
 import static com.ukpatel.expense.tracker.attachment.constants.OperationType.DELETE;
 import static com.ukpatel.expense.tracker.attachment.constants.OperationType.INSERT;
 import static com.ukpatel.expense.tracker.attachment.service.AttachmentSessionManagementService.generateNewSessionId;
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getUserSessionInfo;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
 
 @Service
 @RequiredArgsConstructor
@@ -208,5 +206,58 @@ public class AttachmentService {
 
     public Optional<AttachmentMst> findById(Long attachmentId) {
         return attachmentMstRepo.findById(attachmentId);
+    }
+
+    @Transactional
+    public AttachmentMst saveMultipartFileAttachment(MultipartFile... files) throws IOException {
+        if (files.length == 0) return null;
+        return saveMultipartFileAttachment(Arrays.asList(files));
+    }
+
+    @Transactional
+    public AttachmentMst saveMultipartFileAttachment(List<MultipartFile> files) throws IOException {
+        UserSessionInfo userSessionInfo = getUserSessionInfo();
+        UserMst loggedInUser = getLoggedInUser();
+
+        // Remove all null objects and after if no file objects will there then returning null attachmentId
+        files = getValidFileList(files);
+        if (files.isEmpty()) {
+            return null;
+        }
+
+        // Configuring Attachment Mst
+        AttachmentMst attachmentMst = new AttachmentMst();
+        attachmentMst.setActiveFlag(STATUS_ACTIVE);
+        attachmentMst.setCreatedByUser(loggedInUser);
+        attachmentMst.setCreatedDate(new Date());
+        attachmentMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+        attachmentMstRepo.save(attachmentMst);
+
+        // Saving files in Attachment File Mpg Table
+        List<AttachmentFileMpg> attachmentFileMpgList = new ArrayList<>();
+        for (MultipartFile file : files) {
+            AttachmentFileMpg attachmentFileMpg = new AttachmentFileMpg();
+            attachmentFileMpg.setAttachmentMst(attachmentMst);
+            attachmentFileMpg.setFileName(file.getOriginalFilename());
+            attachmentFileMpg.setFileDesc(file.getOriginalFilename());
+            attachmentFileMpg.setFileSizeInBytes(file.getSize());
+            attachmentFileMpg.setContentType(file.getContentType());
+            attachmentFileMpg.setFileData(file.getBytes());
+            attachmentFileMpg.setActiveFlag(ACTIVE.getStatus());
+            attachmentFileMpg.setCreatedByUser(loggedInUser);
+            attachmentFileMpg.setCreatedDate(new Date());
+            attachmentFileMpg.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+            attachmentFileMpgRepo.save(attachmentFileMpg);
+            attachmentFileMpgList.add(attachmentFileMpg);
+        }
+
+        attachmentMst.setAttachmentFileMpgList(attachmentFileMpgList);
+        return attachmentMst;
+    }
+
+    private List<MultipartFile> getValidFileList(List<MultipartFile> files) {
+        return files.stream()
+                .filter(Objects::nonNull)
+                .toList();
     }
 }
