@@ -39,6 +39,8 @@ ALTER TABLE
     "user_dtl" ADD PRIMARY KEY("user_dtl_id");
 ALTER TABLE
     "user_dtl" ADD CONSTRAINT "user_dtl_user_id_foreign" FOREIGN KEY("user_id") REFERENCES "user_mst"("user_id");
+ALTER TABLE
+    "user_dtl" ADD CONSTRAINT "user_dtl_profile_attachment_id_foreign" FOREIGN KEY("profile_attachment_id") REFERENCES "attachment_mst"("attachment_id");
 
 -- blacklisted_jwt_txn
 CREATE TABLE "blacklisted_jwt_txn"(
