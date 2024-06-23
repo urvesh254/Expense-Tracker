@@ -209,13 +209,13 @@ public class AttachmentService {
     }
 
     @Transactional
-    public Long saveMultipartFileAttachment(MultipartFile... files) throws IOException {
+    public AttachmentMst saveMultipartFileAttachment(MultipartFile... files) throws IOException {
         if (files.length == 0) return null;
         return saveMultipartFileAttachment(Arrays.asList(files));
     }
 
     @Transactional
-    public Long saveMultipartFileAttachment(List<MultipartFile> files) throws IOException {
+    public AttachmentMst saveMultipartFileAttachment(List<MultipartFile> files) throws IOException {
         UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
 
@@ -234,6 +234,7 @@ public class AttachmentService {
         attachmentMstRepo.save(attachmentMst);
 
         // Saving files in Attachment File Mpg Table
+        List<AttachmentFileMpg> attachmentFileMpgList = new ArrayList<>();
         for (MultipartFile file : files) {
             AttachmentFileMpg attachmentFileMpg = new AttachmentFileMpg();
             attachmentFileMpg.setAttachmentMst(attachmentMst);
@@ -247,9 +248,11 @@ public class AttachmentService {
             attachmentFileMpg.setCreatedDate(new Date());
             attachmentFileMpg.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
             attachmentFileMpgRepo.save(attachmentFileMpg);
+            attachmentFileMpgList.add(attachmentFileMpg);
         }
 
-        return attachmentMst.getAttachmentId();
+        attachmentMst.setAttachmentFileMpgList(attachmentFileMpgList);
+        return attachmentMst;
     }
 
     private List<MultipartFile> getValidFileList(List<MultipartFile> files) {

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 
@@ -26,4 +27,6 @@ public class RegisterRequestDTO {
     private String fullName;
 
     private Date dob;
+
+    private MultipartFile profileImg;
 }
