@@ -32,9 +32,8 @@ public class AuthenticationController {
 
     @PostMapping("/register")
     public ResponseEntity<String> register(
-            @Valid @RequestBody RegisterRequestDTO registerRequestDTO
+            @Valid @ModelAttribute RegisterRequestDTO registerRequestDTO
     ) {
-        // TODO: write logic for saving attachment.
         userMstService.saveUser(registerRequestDTO);
         return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
@@ -51,7 +50,9 @@ public class AuthenticationController {
             throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
         }
 
-        Long userId = userMstService.findUserByEmail(loginRequest.getEmail()).get().getUserId();
+        Long userId = userMstService.findUserByEmail(loginRequest.getEmail())
+                .orElseThrow()
+                .getUserId();
         String jwtToken = jwtUtils.issueToken(userId, API_ACCESS_TOKEN);
 
         TokenResponseDTO tokenResponseDTO = TokenResponseDTO.builder()
