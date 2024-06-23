@@ -1,7 +1,7 @@
 package com.ukpatel.expense.tracker.config;
 
 import com.ukpatel.expense.tracker.auth.jwt.filter.JwtAuthenticationFilter;
-import com.ukpatel.expense.tracker.auth.service.UserMstService;
+import com.ukpatel.expense.tracker.auth.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,15 +25,18 @@ import static com.ukpatel.expense.tracker.common.constant.CmnConstants.PUBLIC_EN
 @RequiredArgsConstructor
 public class ApiSecurityConfiguration {
 
-    private final UserMstService userMstService;
+    private final AuthenticationService authenticationService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiAuthenticationEntryPoint apiAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exception -> exception.authenticationEntryPoint(apiAuthenticationEntryPoint))
                 .authorizeHttpRequests(requests -> requests
+                        .requestMatchers("/auth/change-password", "/auth/logout").authenticated()
                         .requestMatchers(PUBLIC_END_POINTS).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sessionConfigure -> sessionConfigure.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -52,7 +55,7 @@ public class ApiSecurityConfiguration {
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userMstService);
+        authProvider.setUserDetailsService(authenticationService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }

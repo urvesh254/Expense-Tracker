@@ -1,5 +1,6 @@
 package com.ukpatel.expense.tracker.auth.controller;
 
+import com.ukpatel.expense.tracker.auth.dto.ChangePasswordRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.LoginRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.RegisterRequestDTO;
 import com.ukpatel.expense.tracker.auth.dto.TokenResponseDTO;
@@ -30,14 +31,18 @@ public class AuthenticationController {
     private final AuthenticationManager authenticationManager;
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequestDTO registerRequestDTO) {
+    public ResponseEntity<String> register(
+            @Valid @RequestBody RegisterRequestDTO registerRequestDTO
+    ) {
         // TODO: write logic for saving attachment.
         userMstService.saveUser(registerRequestDTO);
         return new ResponseEntity<>("User registered successfully", HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDTO> login(@Valid @RequestBody LoginRequestDTO loginRequest) {
+    public ResponseEntity<TokenResponseDTO> login(
+            @Valid @RequestBody LoginRequestDTO loginRequest
+    ) {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         } catch (BadCredentialsException | UsernameNotFoundException e) {
@@ -60,12 +65,21 @@ public class AuthenticationController {
 
     @PostMapping("/logout")
     public void logout(
-            @RequestHeader(value = AUTHORIZATION_HEADER, required = false) String jwtToken
+            @RequestHeader(value = AUTHORIZATION_HEADER) String token
     ) {
-        jwtToken = getJwtTokenFromHeader(jwtToken);
+        String jwtToken = getJwtTokenFromHeader(token);
         if (jwtToken.isEmpty()) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "'Authorization' header is missing from the request");
         }
         userMstService.logout(jwtToken);
+    }
+
+    @PostMapping("/change-password")
+    public void changePassword(
+            @RequestHeader(value = AUTHORIZATION_HEADER) String token,
+            @Valid @RequestBody ChangePasswordRequestDTO changePasswordRequestDTO
+    ) {
+        String jwtToken = getJwtTokenFromHeader(token);
+        userMstService.changeUserPassword(changePasswordRequestDTO, jwtToken);
     }
 }
