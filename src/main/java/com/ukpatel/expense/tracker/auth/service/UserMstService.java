@@ -12,7 +12,6 @@ import com.ukpatel.expense.tracker.auth.jwt.JwtUtils;
 import com.ukpatel.expense.tracker.auth.repo.BlacklistedJwtTxnRepo;
 import com.ukpatel.expense.tracker.auth.repo.UserDtlRepo;
 import com.ukpatel.expense.tracker.auth.repo.UserMstRepo;
-import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,7 +26,7 @@ import java.util.Date;
 import java.util.Optional;
 
 import static com.ukpatel.expense.tracker.auth.constants.UserConstants.*;
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getLoggedInUser;
 
 @Service
 @RequiredArgsConstructor
@@ -49,15 +48,11 @@ public class UserMstService {
         if (userMstRepo.findByEmail(registerRequestDTO.getEmail()).isPresent()) {
             throw new ApplicationException(HttpStatus.CONFLICT, "Email is already exists");
         }
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
 
         UserMst userMst = new UserMst();
         userMst.setEmail(registerRequestDTO.getEmail());
         userMst.setPassword(passwordEncoder.encode(registerRequestDTO.getPassword()));
         userMst.setPwdChangeType(PWD_CHANGE_TYPE_NEW_USER);
-        userMst.setActiveFlag(STATUS_ACTIVE);
-        userMst.setCreatedDate(new Date());
-        userMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         userMstRepo.save(userMst);
 
         UserDtl userDtl = new UserDtl();
@@ -65,34 +60,21 @@ public class UserMstService {
         userDtl.setFullName(registerRequestDTO.getFullName());
         userDtl.setDob(registerRequestDTO.getDob());
         userDtl.setProfileAttachment(getAttachmentIdForProfilePic(registerRequestDTO.getProfileImg()));
-        userDtl.setActiveFlag(STATUS_ACTIVE);
-        userDtl.setCreatedDate(new Date());
-        userDtl.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         userDtlRepo.save(userDtl);
     }
 
     @Transactional
     public void logout(String jwtToken) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = new UserMst();
-        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
-
         Date validTill = jwtUtils.decodeToken(jwtToken).getExpiration();
 
         BlacklistedJwtTxn blacklistedJwtTxn = new BlacklistedJwtTxn();
         blacklistedJwtTxn.setToken(jwtToken);
         blacklistedJwtTxn.setValidTill(validTill);
-        blacklistedJwtTxn.setActiveFlag(STATUS_ACTIVE);
-        blacklistedJwtTxn.setCreatedByUser(loggedInUser);
-        blacklistedJwtTxn.setCreatedDate(new Date());
-        blacklistedJwtTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         blacklistedJwtTxnRepo.save(blacklistedJwtTxn);
     }
 
     @Transactional
     public void changeUserPassword(ChangePasswordRequestDTO changePasswordRequestDTO, String jwtToken) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-
         UserMst userMst = findUserByEmail(changePasswordRequestDTO.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not Found!!"));
 
@@ -105,8 +87,6 @@ public class UserMstService {
         String newEncodedPassword = passwordEncoder.encode(changePasswordRequestDTO.getNewPassword());
         userMst.setPassword(newEncodedPassword);
         userMst.setPwdChangeType(PWD_CHANGE_TYPE_CHANGE_PASSWORD);
-        userMst.setUpdatedDate(new Date());
-        userMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         userMstRepo.save(userMst);
 
         // Blacklisting the existing JWT token.
@@ -157,7 +137,6 @@ public class UserMstService {
 
     @Transactional
     public UserDTO updateUserInfo(UserDTO userDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
         UserMst userMst = userMstRepo.findById(loggedInUser.getUserId())
                 .orElseThrow(() -> new UsernameNotFoundException("User not Found!!"));
@@ -177,9 +156,6 @@ public class UserMstService {
         if (attachmentIdForProfilePic != null) {
             userDtl.setProfileAttachment(attachmentIdForProfilePic);
         }
-        
-        userDtl.setUpdatedDate(new Date());
-        userDtl.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         userDtlRepo.save(userDtl);
 
         // Setting values to dto
