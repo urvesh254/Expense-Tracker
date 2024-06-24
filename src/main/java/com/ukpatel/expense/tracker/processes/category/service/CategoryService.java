@@ -1,7 +1,5 @@
 package com.ukpatel.expense.tracker.processes.category.service;
 
-import com.ukpatel.expense.tracker.auth.entity.UserMst;
-import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
 import com.ukpatel.expense.tracker.processes.cashbook.entity.Cashbook;
 import com.ukpatel.expense.tracker.processes.cashbook.service.CashbookValidationService;
@@ -13,10 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_INACTIVE;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +26,6 @@ public class CategoryService {
 
     @Transactional
     public CategoryDTO createCategory(CategoryDTO categoryDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Validating Cashbook
         Cashbook cashbook = cashbookValidationService.validateCashbookUser(categoryDTO.getCashbookId());
         String categoryName = categoryDTO.getCategoryName().trim();
@@ -44,10 +39,6 @@ public class CategoryService {
         Category category = new Category();
         category.setCategoryName(categoryName);
         category.setCashbook(cashbook);
-        category.setActiveFlag(STATUS_ACTIVE);
-        category.setCreatedByUser(loggedInUser);
-        category.setCreatedDate(new Date());
-        category.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         categoryRepo.save(category);
 
         categoryDTO.setCategoryId(category.getCategoryId());
@@ -56,9 +47,6 @@ public class CategoryService {
 
     @Transactional
     public CategoryDTO updateCategory(CategoryDTO categoryDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Validating Cashbook Category
         String categoryName = categoryDTO.getCategoryName().trim();
         Category category = categoryValidationService.validateCashbookCategory(categoryDTO.getCashbookId(), categoryDTO.getCategoryId());
@@ -68,9 +56,6 @@ public class CategoryService {
 
         // Updating Category Values
         category.setCategoryName(categoryName);
-        category.setUpdatedByUser(loggedInUser);
-        category.setUpdatedDate(new Date());
-        category.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         categoryRepo.save(category);
 
         return categoryDTO;
@@ -78,15 +63,9 @@ public class CategoryService {
 
     @Transactional
     public void deleteCategory(Long cashbookId, Long categoryId) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Validating Cashbook Category
         Category category = categoryValidationService.validateCashbookCategory(cashbookId, categoryId);
         category.setActiveFlag(STATUS_INACTIVE);
-        category.setUpdatedByUser(loggedInUser);
-        category.setUpdatedDate(new Date());
-        category.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         categoryRepo.save(category);
     }
 
