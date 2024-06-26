@@ -9,8 +9,6 @@ import com.ukpatel.expense.tracker.attachment.entity.AttachmentOperationTxn;
 import com.ukpatel.expense.tracker.attachment.repo.AttachmentFileMpgRepo;
 import com.ukpatel.expense.tracker.attachment.repo.AttachmentMstRepo;
 import com.ukpatel.expense.tracker.attachment.repo.AttachmentOperationTxnRepo;
-import com.ukpatel.expense.tracker.auth.entity.UserMst;
-import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,11 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
 
-import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.*;
+import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.CREATED;
+import static com.ukpatel.expense.tracker.attachment.constants.AttachmentStatus.INACTIVE;
 import static com.ukpatel.expense.tracker.attachment.constants.OperationType.DELETE;
 import static com.ukpatel.expense.tracker.attachment.constants.OperationType.INSERT;
 import static com.ukpatel.expense.tracker.attachment.service.AttachmentSessionManagementService.generateNewSessionId;
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
 
 @Service
 @RequiredArgsConstructor
@@ -37,20 +36,13 @@ public class AttachmentService {
 
     @Transactional
     public AttachmentDTO saveFileAttachmentInSession(AttachmentDTO attachmentDTO, MultipartFile file) throws IOException {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = new UserMst();
-        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
-
         // Configuring Attachment Mst
         AttachmentMst attachmentMst;
         if (attachmentDTO.getAttachmentId() != null) {
-            attachmentMst = attachmentMstRepo.findById(attachmentDTO.getAttachmentId()).orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "attachmentId not found"));
+            attachmentMst = attachmentMstRepo.findById(attachmentDTO.getAttachmentId())
+                    .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "attachmentId not found"));
         } else {
             attachmentMst = new AttachmentMst();
-            attachmentMst.setActiveFlag(STATUS_ACTIVE);
-            attachmentMst.setCreatedByUser(loggedInUser);
-            attachmentMst.setCreatedDate(new Date());
-            attachmentMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
             attachmentMstRepo.save(attachmentMst);
         }
 
@@ -63,17 +55,11 @@ public class AttachmentService {
         attachmentFileMpg.setContentType(file.getContentType());
         attachmentFileMpg.setFileData(file.getBytes());
         attachmentFileMpg.setActiveFlag(CREATED.getStatus());
-        attachmentFileMpg.setCreatedByUser(loggedInUser);
-        attachmentFileMpg.setCreatedDate(new Date());
-        attachmentFileMpg.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         attachmentFileMpgRepo.save(attachmentFileMpg);
 
         // Inserting file operation in session
         UUID sessionId = generateNewSessionId(attachmentDTO.getSessionId());
         AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, INSERT);
-        operationTxn.setCreatedByUser(loggedInUser);
-        operationTxn.setCreatedDate(new Date());
-        operationTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         operationTxnRepo.save(operationTxn);
 
         // Setting data that need to send as response
@@ -86,10 +72,6 @@ public class AttachmentService {
 
     @Transactional
     public AttachmentDTO deleteFileAttachmentInSession(AttachmentDTO attachmentDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = new UserMst();
-        loggedInUser.setUserId(userSessionInfo.getUserDTO().getUserId());
-
         if (attachmentDTO.getAttachmentId() == null || attachmentDTO.getAttachmentFileId() == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Attachment ID and Attachment File ID must not be null");
         }
@@ -102,11 +84,7 @@ public class AttachmentService {
         // Inserting file operation in session
         UUID sessionId = generateNewSessionId(attachmentDTO.getSessionId());
         AttachmentOperationTxn operationTxn = new AttachmentOperationTxn(sessionId, attachmentFileMpg, DELETE);
-        operationTxn.setCreatedByUser(loggedInUser);
-        operationTxn.setCreatedDate(new Date());
-        operationTxn.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         operationTxnRepo.save(operationTxn);
-
 
         // Setting data that need to send as response
         attachmentDTO.setAttachmentId(attachmentFileMpg.getAttachmentMst().getAttachmentId());
@@ -216,9 +194,6 @@ public class AttachmentService {
 
     @Transactional
     public AttachmentMst saveMultipartFileAttachment(List<MultipartFile> files) throws IOException {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Remove all null objects and after if no file objects will there then returning null attachmentId
         files = getValidFileList(files);
         if (files.isEmpty()) {
@@ -227,10 +202,6 @@ public class AttachmentService {
 
         // Configuring Attachment Mst
         AttachmentMst attachmentMst = new AttachmentMst();
-        attachmentMst.setActiveFlag(STATUS_ACTIVE);
-        attachmentMst.setCreatedByUser(loggedInUser);
-        attachmentMst.setCreatedDate(new Date());
-        attachmentMst.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         attachmentMstRepo.save(attachmentMst);
 
         // Saving files in Attachment File Mpg Table
@@ -243,10 +214,7 @@ public class AttachmentService {
             attachmentFileMpg.setFileSizeInBytes(file.getSize());
             attachmentFileMpg.setContentType(file.getContentType());
             attachmentFileMpg.setFileData(file.getBytes());
-            attachmentFileMpg.setActiveFlag(ACTIVE.getStatus());
-            attachmentFileMpg.setCreatedByUser(loggedInUser);
-            attachmentFileMpg.setCreatedDate(new Date());
-            attachmentFileMpg.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
+
             attachmentFileMpgRepo.save(attachmentFileMpg);
             attachmentFileMpgList.add(attachmentFileMpg);
         }
