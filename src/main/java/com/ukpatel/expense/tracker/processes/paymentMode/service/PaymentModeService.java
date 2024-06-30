@@ -1,7 +1,5 @@
 package com.ukpatel.expense.tracker.processes.paymentMode.service;
 
-import com.ukpatel.expense.tracker.auth.entity.UserMst;
-import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
 import com.ukpatel.expense.tracker.processes.cashbook.entity.Cashbook;
 import com.ukpatel.expense.tracker.processes.cashbook.service.CashbookValidationService;
@@ -13,10 +11,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 
-import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_ACTIVE;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.STATUS_INACTIVE;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +26,6 @@ public class PaymentModeService {
 
     @Transactional
     public PaymentModeDTO createPaymentMode(PaymentModeDTO paymentModeDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Validating Cashbook
         Cashbook cashbook = cashbookValidationService.validateCashbookUser(paymentModeDTO.getCashbookId());
         String paymentModeName = paymentModeDTO.getPaymentModeName().trim();
@@ -48,10 +43,6 @@ public class PaymentModeService {
         PaymentMode paymentMode = new PaymentMode();
         paymentMode.setPaymentModeName(paymentModeName);
         paymentMode.setCashbook(cashbook);
-        paymentMode.setActiveFlag(STATUS_ACTIVE);
-        paymentMode.setCreatedByUser(loggedInUser);
-        paymentMode.setCreatedDate(new Date());
-        paymentMode.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
         paymentModeRepo.save(paymentMode);
 
         paymentModeDTO.setPaymentModeId(paymentMode.getPaymentModeId());
@@ -60,9 +51,6 @@ public class PaymentModeService {
 
     @Transactional
     public PaymentModeDTO updatePaymentMode(PaymentModeDTO paymentModeDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Validating Cashbook Payment Mode
         String paymentModeName = paymentModeDTO.getPaymentModeName().trim();
         PaymentMode paymentMode = paymentModeValidationService.validateCashbookPaymentMode(paymentModeDTO.getCashbookId(), paymentModeDTO.getPaymentModeId());
@@ -76,9 +64,6 @@ public class PaymentModeService {
 
         // Updating Payment Mode Values
         paymentMode.setPaymentModeName(paymentModeName);
-        paymentMode.setUpdatedByUser(loggedInUser);
-        paymentMode.setUpdatedDate(new Date());
-        paymentMode.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         paymentModeRepo.save(paymentMode);
 
         return paymentModeDTO;
@@ -86,15 +71,9 @@ public class PaymentModeService {
 
     @Transactional
     public void deletePaymentMode(Long cashbookId, Long paymentModeId) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Validating Cashbook Payment Mode
         PaymentMode paymentMode = paymentModeValidationService.validateCashbookPaymentMode(cashbookId, paymentModeId);
         paymentMode.setActiveFlag(STATUS_INACTIVE);
-        paymentMode.setUpdatedByUser(loggedInUser);
-        paymentMode.setUpdatedDate(new Date());
-        paymentMode.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         paymentModeRepo.save(paymentMode);
     }
 

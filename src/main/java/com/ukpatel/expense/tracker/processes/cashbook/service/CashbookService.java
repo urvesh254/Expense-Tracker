@@ -1,7 +1,6 @@
 package com.ukpatel.expense.tracker.processes.cashbook.service;
 
 import com.ukpatel.expense.tracker.auth.entity.UserMst;
-import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
 import com.ukpatel.expense.tracker.exception.ApplicationException;
 import com.ukpatel.expense.tracker.processes.cashbook.dto.CashbookDTO;
 import com.ukpatel.expense.tracker.processes.cashbook.entity.Cashbook;
@@ -12,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 
 import static com.ukpatel.expense.tracker.common.constant.CmnConstants.*;
@@ -26,7 +24,6 @@ public class CashbookService {
 
     @Transactional
     public CashbookDTO createCashbook(CashbookDTO cashbookDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
 
         try {
@@ -34,10 +31,6 @@ public class CashbookService {
             Cashbook cashbook = new Cashbook();
             cashbook.setCashbookName(cashbookDTO.getCashbookName().trim());
             cashbook.setUserMst(loggedInUser);
-            cashbook.setActiveFlag(STATUS_ACTIVE);
-            cashbook.setCreatedByUser(loggedInUser);
-            cashbook.setCreatedDate(new Date());
-            cashbook.setCreatedByIp(userSessionInfo.getRemoteIpAddr());
             cashbookRepo.save(cashbook);
 
             return CashbookDTO.builder()
@@ -52,7 +45,6 @@ public class CashbookService {
 
     @Transactional
     public CashbookDTO updateCashbook(CashbookDTO cashbookDTO) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
         UserMst loggedInUser = getLoggedInUser();
 
         // Updating Cashbook
@@ -63,9 +55,6 @@ public class CashbookService {
         }
 
         cashbook.setCashbookName(cashbookDTO.getCashbookName().trim());
-        cashbook.setUpdatedByUser(loggedInUser);
-        cashbook.setUpdatedDate(new Date());
-        cashbook.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         cashbookRepo.save(cashbook);
 
         cashbookDTO.setUserId(loggedInUser.getUserId());
@@ -74,15 +63,9 @@ public class CashbookService {
 
     @Transactional
     public void deleteCashbook(Long cashbookId) {
-        UserSessionInfo userSessionInfo = getUserSessionInfo();
-        UserMst loggedInUser = getLoggedInUser();
-
         // Soft deleting Cashbook
         Cashbook cashbook = cashbookValidationService.validateCashbookUser(cashbookId);
         cashbook.setActiveFlag(STATUS_INACTIVE);
-        cashbook.setUpdatedByUser(loggedInUser);
-        cashbook.setUpdatedDate(new Date());
-        cashbook.setUpdatedByIp(userSessionInfo.getRemoteIpAddr());
         cashbookRepo.save(cashbook);
     }
 
