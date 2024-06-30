@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS user_mst;
 DROP TABLE IF EXISTS user_dtl_hst;
 DROP TABLE IF EXISTS user_pwd_changed_hst;
 DROP TABLE IF EXISTS blacklisted_jwt_txn;
+DROP TABLE IF EXISTS user_auth_code_txn;
 
 
 -- user_mst
@@ -52,6 +53,25 @@ CREATE TABLE "blacklisted_jwt_txn"(
     "created_date" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
     "created_by_ip" VARCHAR(255) NOT NULL
 );
+
+CREATE TABLE "user_auth_code_txn"(
+    "user_auth_code_txn_id" bigserial NOT NULL,
+    "auth_code" VARCHAR(255) NOT NULL,
+    "valid_till" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    "verification_code" VARCHAR(255) NOT NULL,
+    "email_audit_id" BIGINT NOT NULL,
+    "active_flag" SMALLINT NOT NULL,
+    "created_by_user_id" BIGINT NOT NULL,
+    "created_date" TIMESTAMP(0) WITHOUT TIME ZONE NOT NULL,
+    "created_by_ip" VARCHAR(255) NOT NULL,
+    "updated_by_user_id" BIGINT NULL,
+    "updated_date" TIMESTAMP(0) WITHOUT TIME ZONE NULL,
+    "updated_by_ip" VARCHAR(255) NULL
+);
+ALTER TABLE
+    "user_auth_code_txn" ADD PRIMARY KEY("user_auth_code_txn_id");
+ALTER TABLE
+    "user_auth_code_txn" ADD CONSTRAINT "user_auth_code_txn_email_audit_id_foreign" FOREIGN KEY("email_audit_id") REFERENCES "email_audit_trail"("email_audit_id");
 
 ----------------------  Triggers For History ----------------------
 -- Creating Trigger for maintaining automatic history of important tables.
