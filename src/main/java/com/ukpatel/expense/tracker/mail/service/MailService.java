@@ -10,6 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
+import static com.ukpatel.expense.tracker.mail.constant.MailConstants.KEY_EMAIL_AUDIT_ID;
+
 @Service
 @RequiredArgsConstructor
 public class MailService {
@@ -26,6 +28,8 @@ public class MailService {
         emailAuditTrail.setRequestData(json.writeValueAsString(args));
         emailAuditTrail.setResponseData(json.writeValueAsString(response));
         emailAuditTrailRepo.save(emailAuditTrail);
+
+        response.put(KEY_EMAIL_AUDIT_ID, emailAuditTrail.getEmailAuditId());
         return response;
     }
 }
