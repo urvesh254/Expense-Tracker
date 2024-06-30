@@ -1,14 +1,15 @@
 package com.ukpatel.expense.tracker.common.base.entity;
 
 import com.ukpatel.expense.tracker.auth.entity.UserMst;
-import jakarta.persistence.Column;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MappedSuperclass;
+import com.ukpatel.expense.tracker.common.dto.UserSessionInfo;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getLoggedInUser;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.getUserSessionInfo;
 
 @Getter
 @Setter
@@ -24,4 +25,13 @@ public abstract class AuditBaseWithUpdater extends AuditBase {
 
     @Column(name = "updated_by_ip")
     protected String updatedByIp;
+
+    @PreUpdate
+    private void handleBeforeUpdate() {
+        UserSessionInfo userSessionInfo = getUserSessionInfo();
+
+        updatedByUser = getLoggedInUser();
+        updatedDate = new Date();
+        updatedByIp = userSessionInfo.getRemoteIpAddr();
+    }
 }

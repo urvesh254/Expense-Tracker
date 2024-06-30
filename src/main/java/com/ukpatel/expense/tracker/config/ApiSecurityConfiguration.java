@@ -19,6 +19,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import static com.ukpatel.expense.tracker.common.constant.CmnConstants.PUBLIC_END_POINTS;
+import static com.ukpatel.expense.tracker.common.constant.CmnConstants.PUBLIC_END_POINT_EXCEPTIONS;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +37,7 @@ public class ApiSecurityConfiguration {
                 .cors(AbstractHttpConfigurer::disable)
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(apiAuthenticationEntryPoint))
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/auth/change-password", "/auth/logout").authenticated()
+                        .requestMatchers(PUBLIC_END_POINT_EXCEPTIONS).authenticated()
                         .requestMatchers(PUBLIC_END_POINTS).permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(sessionConfigure -> sessionConfigure.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

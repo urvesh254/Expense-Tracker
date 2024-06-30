@@ -49,6 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserSessionInfo userSessionInfo = UserSessionInfo.builder()
                     .remoteHostName(request.getRemoteHost())
                     .remoteIpAddr(request.getRemoteAddr())
+                    .userDTO(UserDTO.builder().build())
                     .build();
             request.setAttribute(USER_SESSION_INFO, userSessionInfo);
 

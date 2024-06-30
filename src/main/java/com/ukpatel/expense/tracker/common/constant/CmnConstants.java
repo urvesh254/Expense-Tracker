@@ -17,6 +17,11 @@ public final class CmnConstants {
     public static final String REGEX_EMAIL = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
     public static final String USER_SESSION_INFO = "USER_SESSION_INFO";
     public static final String PUBLIC_END_POINTS = "/auth/**";
+    public static final String[] PUBLIC_END_POINT_EXCEPTIONS = new String[]{
+            "/auth/change-password",
+            "/auth/logout",
+            "/auth/forgot-password"
+    };
 
 
     // Prevent instantiation
