@@ -8,7 +8,7 @@ public class ApplicationException extends RuntimeException {
 
     public ApplicationException(String message) {
         super(message);
-        this.status=HttpStatus.INTERNAL_SERVER_ERROR;
+        this.status = HttpStatus.INTERNAL_SERVER_ERROR;
     }
 
     public ApplicationException(HttpStatus status, String message) {
@@ -22,6 +22,6 @@ public class ApplicationException extends RuntimeException {
 
     @Override
     public String toString() {
-        return "CustomException{" + "status=" + status + ",message=" + getMessage() + '}';
+        return "ApplicationException {" + "status=" + status + ",message=" + getMessage() + '}';
     }
 }
