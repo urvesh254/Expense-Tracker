@@ -1,0 +1,1316 @@
+{
+	"info": {
+		"_postman_id": "1c813e15-ffcf-412e-bda0-a955e35ad52e",
+		"name": "Expense Tracker",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17187670",
+		"_collection_link": "https://dark-trinity-836871.postman.co/workspace/Expense-Tracker~dbb0e402-11ae-4596-ad75-25138e0679ba/collection/17187670-1c813e15-ffcf-412e-bda0-a955e35ad52e?action=share&source=collection_link&creator=17187670"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Forgot Password",
+					"item": [
+						{
+							"name": "Generate Auth Code",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();\r",
+											"pm.collectionVariables.set(\"verificationCode\", jsonData.verificationCode);\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"email\": \"projects.by.urvesh@gmail.com\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/generate-auth-code",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"generate-auth-code"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Verify Auth Code",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();\r",
+											"pm.collectionVariables.set(\"resetToken\", jsonData.token);\r",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"authCode\": \"160376\",\r\n    \"verificationCode\": \"{{verificationCode}}\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/verify-auth-code",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"verify-auth-code"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Forgot Password",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{resetToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"newPassword\": \"Test@123\",\r\n    \"confirmNewPassword\": \"Test@123\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/auth/forgot-password",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"auth",
+										"forgot-password"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "email",
+									"value": "urvesh4@gamil.com",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "Test@123",
+									"type": "text"
+								},
+								{
+									"key": "fullName",
+									"value": "Urvesh Patel",
+									"type": "text"
+								},
+								{
+									"key": "dob",
+									"value": "12/05/2001",
+									"type": "text"
+								},
+								{
+									"key": "profileImg",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"pm.collectionVariables.set(\"jwtToken\",response.token);\r",
+									"pm.collectionVariables.set(\"userId\",response.userId);\r",
+									"pm.collectionVariables.set(\"email\",response.email);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"projects.by.urvesh@gmail.com\",\r\n    \"password\": \"Test@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"urvesh3@gamil.com\",\r\n    \"currentPassword\": \"Test@1234\",\r\n    \"newPassword\": \"Test@123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get LoggedIn User Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update LoggedIn User Info",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "fullName",
+									"value": "UKPatel",
+									"type": "text"
+								},
+								{
+									"key": "dob",
+									"value": "02/01/2001",
+									"type": "text"
+								},
+								{
+									"key": "profileImg",
+									"type": "file",
+									"src": "/C:/Users/urves/Downloads/Urvesh - Photo.jpg"
+								},
+								{
+									"key": "profileImg",
+									"type": "file",
+									"src": [],
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/user",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"user"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Attachment",
+			"item": [
+				{
+					"name": "Get Attachments",
+					"item": [
+						{
+							"name": "Get All Attachment Files",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwtToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/attachment/7",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"attachment",
+										"7"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Single Attachment File Metadata",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwtToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/attachment/7/3",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"attachment",
+										"7",
+										"3"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "View Attachment File",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwtToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/attachment/7/11?option=view",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"attachment",
+										"7",
+										"11"
+									],
+									"query": [
+										{
+											"key": "option",
+											"value": "view",
+											"description": "download"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Download Attachment File",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{jwtToken}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/attachment/7/3?option=download",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"attachment",
+										"7",
+										"3"
+									],
+									"query": [
+										{
+											"key": "option",
+											"value": "download",
+											"description": "download"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Attachment Upload",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"pm.collectionVariables.set(\"attachmentId\",response.attachmentId);\r",
+									"pm.collectionVariables.set(\"sessionId\",response.sessionId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "/C:/Users/urves/Downloads/drawSQL-pgsql-export-2024-06-23.sql"
+								},
+								{
+									"key": "attachmentId",
+									"value": "{{attachmentId}}",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "sessionId",
+									"value": "{{sessionId}}",
+									"type": "text",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/attachment/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attachment",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Attachment File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"pm.collectionVariables.set(\"attachmentId\",response.attachmentId);\r",
+									"pm.collectionVariables.set(\"sessionId\",response.sessionId);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/attachment/10/19?sessionId={{sessionId}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attachment",
+								"10",
+								"19"
+							],
+							"query": [
+								{
+									"key": "sessionId",
+									"value": "{{sessionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Finalize Save",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{jwtToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"attachmentId\": {{attachmentId}},\r\n    \"sessionId\": \"{{sessionId}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/attachment/save",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attachment",
+								"save"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Processes",
+			"item": [
+				{
+					"name": "Cashbook",
+					"item": [
+						{
+							"name": "Create Cashbook",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"cashbookName\":\"Personal Expenses\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Cashbook",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"cashbookName\":\"Personal Expenses 5\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"5"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Cashbook",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"5"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Active Cashbook",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"5"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Active Cashbooks",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Category",
+					"item": [
+						{
+							"name": "Create Category",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"categoryName\": \"Food\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/categories",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Category",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"categoryName\": \"Food 2\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/categories/8",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"categories",
+										"8"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Category",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/categories/5",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"categories",
+										"5"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Active Category",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"categoryName\": \"Food\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/categories/8",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"categories",
+										"8"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Active Categories",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/categories",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"categories"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Payment Mode",
+					"item": [
+						{
+							"name": "Create Payment Mode",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"paymentModeName\": \"Offline\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/payment-modes",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"payment-modes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Payment Mode",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"paymentModeName\": \"Offline\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/payment-modes/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"payment-modes",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Payment Mode",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/payment-modes/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"payment-modes",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Active Payment Mode",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/payment-modes/2",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"payment-modes",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Active Payment Modes",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/payment-modes",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"payment-modes"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Expense",
+					"item": [
+						{
+							"name": "Create Expense",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"entryType\": \"CASH_OUT\",\r\n    \"entryDateTime\": \"2024-02-01T00:00:00\",\r\n    \"amount\": 2000,\r\n    \"remarks\":\"Testing 10\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/10/expenses",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"10",
+										"expenses"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update Expense",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"entryType\": \"CASH_IN\",\r\n    \"entryDateTime\": \"2024-02-03T00:00:00\",\r\n    \"amount\": 1,\r\n    \"remarks\":\"Testing 10 Update\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/cashbooks/10/expenses/17",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"10",
+										"expenses",
+										"17"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete Expense",
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/expenses/2",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"expenses",
+										"2"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Expense By Id",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/expenses/9",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"expenses",
+										"9"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get All Active Expense",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/cashbooks/1/expenses",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"cashbooks",
+										"1",
+										"expenses"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwtToken}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": ""
+		},
+		{
+			"key": "jwtToken",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "email",
+			"value": ""
+		},
+		{
+			"key": "attachmentId",
+			"value": ""
+		},
+		{
+			"key": "sessionId",
+			"value": ""
+		},
+		{
+			"key": "verificationCode",
+			"value": ""
+		},
+		{
+			"key": "resetToken",
+			"value": ""
+		}
+	]
+}
