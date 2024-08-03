@@ -189,6 +189,11 @@ public class UserMstService {
         UserMst userMst = findUserByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not Found!!"));
 
+        if (userAuthCodeTxnRepo.isForgotPasswordAttemptsExhausted(userMst.getUserId(), FORGOT_PASSWORD_ATTEMPT_MAX_COUNT)) {
+            throw new ApplicationException(HttpStatus.TOO_MANY_REQUESTS,
+                    "You have exceeded the maximum number of password reset attempts for today. Please try again tomorrow");
+        }
+
         // Setting current user in user session info
         getUserSessionInfo().getUserDTO().setUserId(userMst.getUserId());
 
