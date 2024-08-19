@@ -20,7 +20,7 @@ public class CategoryValidationService {
 
     public Category validateCashbookCategory(Long cashbookId, Long categoryId) {
         if (categoryId == null) {
-            throw new ApplicationException("categoryId is required");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "categoryId is required");
         }
         // Validate Cashbook
         Cashbook cashbook = cashbookValidationService.validateCashbookUser(cashbookId);

@@ -27,7 +27,7 @@ public class CashbookValidationService {
 
     public Cashbook validateCashbookUser(Long cashbookId) {
         if (cashbookId == null) {
-            throw new ApplicationException("cashbookId is required");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "cashbookId is required");
         }
         Cashbook cashbook = cashbookRepo.findByCashbookIdAndActiveFlag(cashbookId, STATUS_ACTIVE)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Cashbook not found"));

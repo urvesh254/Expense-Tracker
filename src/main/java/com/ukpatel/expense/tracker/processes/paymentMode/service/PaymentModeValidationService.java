@@ -20,7 +20,7 @@ public class PaymentModeValidationService {
 
     public PaymentMode validateCashbookPaymentMode(Long cashbookId, Long paymentModeId) {
         if (paymentModeId == null) {
-            throw new ApplicationException("paymentModeId is required");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "paymentModeId is required");
         }
         // Validate Cashbook
         Cashbook cashbook = cashbookValidationService.validateCashbookUser(cashbookId);

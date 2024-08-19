@@ -33,16 +33,16 @@ public class ExpenseValidationService {
         boolean isValidationTypeCreate = VALIDATION_TYPE_CREATE.equals(validationType);
         boolean isValidationTypeUpdate = VALIDATION_TYPE_UPDATE.equals(validationType);
         if (!(isValidationTypeCreate || isValidationTypeUpdate)) {
-            throw new ApplicationException("Validate type must be from 'VALIDATION_TYPE_CREATE' or 'VALIDATION_TYPE_UPDATE' ");
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Validate type must be from 'VALIDATION_TYPE_CREATE' or 'VALIDATION_TYPE_UPDATE' ");
         }
 
         Expense expense = new Expense();
         if (isValidationTypeUpdate) {
             expense = expenseRepo.findByExpenseIdAndCashbookCashbookIdAndActiveFlag(
-                    expenseDTO.getExpenseId(),
-                    expenseDTO.getCashbookId(),
-                    STATUS_ACTIVE
-            )
+                            expenseDTO.getExpenseId(),
+                            expenseDTO.getCashbookId(),
+                            STATUS_ACTIVE
+                    )
                     .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, "Expense not found"));
         }
 
